@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/local/munki/munki-python
 
 # Copyright 2018 Greg Neagle.
 #
@@ -43,7 +43,7 @@ def local_node():
         my_session, "/Local/Default", None
     )
     if err:
-        print >> sys.stderr, err
+        print(err, file=sys.stderr)
     return node
 
 
@@ -59,7 +59,7 @@ def get_user_record(username):
             None
         )
         if err:
-            print >> sys.stderr, err
+            print(err, file=sys.stderr)
     return record
 
 
@@ -75,7 +75,7 @@ def create_user_record(username):
             None
         )
         if err:
-            print >> sys.stderr, err
+            print(err, file=sys.stderr)
     return record
 
 
@@ -83,7 +83,7 @@ def get_attribute_for_user(attr, user_record):
     """Returns value(s) for an attribute"""
     values, err = user_record.valuesForAttribute_error_(attr, None)
     if err:
-        print >> sys.stderr, err
+        print(err, file=sys.stderr)
     return values
 
 
@@ -117,7 +117,7 @@ def set_attributes_for_user(attrs, user_record, attrs_to_skip=None):
     if attrs_to_skip is None:
         attrs_to_skip = []
     if user_record:
-        for attr, value in attrs.items():
+        for attr, value in list(attrs.items()):
             if attr == "authentication_authority":
                 # preserve any pre-exisiting authentication_authority items we
                 # don't have in our managed plist (SecureToken being the really
@@ -128,10 +128,10 @@ def set_attributes_for_user(attrs, user_record, attrs_to_skip=None):
                     value, attr, None
                 )
                 if not success:
-                    print >> sys.stderr, err
+                    print(err, file=sys.stderr)
                     return False
         return True
-    print sys.stderr, "User record was nil"
+    print(sys.stderr, "User record was nil")
     return False
 
 
@@ -166,23 +166,23 @@ def main():
     try:
         # get path to user plist from first argument
         user_plist = sys.argv[1]
-    except IndexError, err:
-        print >> sys.stderr, "Missing path to user plist!"
+    except IndexError as err:
+        print("Missing path to user plist!", file=sys.stderr)
         exit(-1)
     if not os.path.exists(user_plist):
-        print >> sys.stderr, "%s doesn't exist!" % user_plist
+        print("%s doesn't exist!" % user_plist, file=sys.stderr)
         exit(-1)
     try:
         # read the user plist
         userdata = read_plist(user_plist)
     except FoundationPlistException as err:
-        print >> sys.stderr, "Could not read plist: %s" % err
+        print("Could not read plist: %s" % err, file=sys.stderr)
         exit(-1)
     try:
         # extract the username from the user plist data
         username = userdata["name"][0]
     except (KeyError, IndexError) as err:
-        print >> sys.stderr, "Could not get username from plist: %s" % err
+        print("Could not get username from plist: %s" % err, file=sys.stderr)
         exit(-1)
     # find a local user record for username
     record = get_user_record(username)
@@ -191,7 +191,7 @@ def main():
         # create a new local user named username
         record = create_user_record(username)
         if not record:
-            print >> sys.stderr, "Failed to create user record!"
+            print("Failed to create user record!", file=sys.stderr)
             exit(-1)
     else:
         # existing user record we're updating
